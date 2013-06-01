@@ -1,10 +1,10 @@
 {
     "name":"express-view-cache",
     "version":"0.0.1",
-    "description":"Unobtrusive solution to express framework - cache rendered page on server side, without unnecessary database requests and rendering.",
-    "main":"index.js",
+    "description":"Example of Unobtrusive solution to express framework - cache rendered page on server side, without unnecessary database requests and rendering.",
+    "main":"app.js",
     "scripts":{
-        "test":"./node_modules/.bin/vows -v tests/*"
+        "run":"node app.js"
     },
     "repository":{
         "type":"git",
@@ -20,9 +20,6 @@
     },
     "dependencies":{
         "express":"3.x"
-    },
-    "devDependencies":{
-        "vows":"*"
     },
     "keywords":[
         "express",
