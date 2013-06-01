@@ -1,6 +1,8 @@
 var memoryAdapter=require('./lib/adapterMemory.js'),
     memJSAdapter=require('./lib/adapterMemJS.js');
 
+// Caching middleware for Express framework
+// details are here https://github.com/vodolaz095/express-view-cache
 
 
 module.exports=function(invalidateTimeInMilliseconds,parameters){

@@ -20,12 +20,6 @@ vows.describe('Middleware tests').
 
                     }
                 },
-                "next1st":function () {
-                    throw new Error('Next is called when cached! It is not right!')
-                },
-                "next2nd":function () {
-                    console.log('Next2nd called!')
-                },
                 "response2nd":{
                     'header':function (header) {
                         console.log('Header set in response 2');
@@ -34,6 +28,12 @@ vows.describe('Middleware tests').
                     'send':function (content) {
                         //assert.equal(content, 'index_html')
                     }
+                },
+                "next1st":function () {
+                    throw new Error('Next is called when cached! It is not right!')
+                },
+                "next2nd":function () {
+                    console.log('Next2nd called!')
                 }
             },
             "It should be a function":function (topic) {
@@ -60,7 +60,7 @@ vows.describe('Middleware tests').
             "It should ignore not GET requests":function(topic){
                 var f = topic.middleware;
                 f({'originalUrl':'/doSomething', 'method':'POST'}, topic.response2nd, topic.next2nd);
-                f({'originalUrl':'/doSomethingl', 'method':'PUT'}, topic.response2nd, topic.next2nd);
+                f({'originalUrl':'/doSomething', 'method':'PUT'}, topic.response2nd, topic.next2nd);
                 f({'originalUrl':'/doSomething', 'method':'DELETE'}, topic.response2nd, topic.next2nd);
                 f({'originalUrl':'/doSomething', 'method':'OPTIONS'}, topic.response2nd, topic.next2nd);
             }
