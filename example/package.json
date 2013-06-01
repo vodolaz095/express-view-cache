@@ -19,7 +19,7 @@
         "url":"http://www.teksi.ru/resume"
     },
     "dependencies":{
-        "memjs":"*"
+        "express":"3.x"
     },
     "devDependencies":{
         "vows":"*"

@@ -4,7 +4,7 @@ var memoryAdapter=require('./lib/adapterMemory.js'),
 
 
 module.exports=function(invalidateTimeInMilliseconds,parameters){
-    if(invalidateTimeInMilliseconds && /^\d$/.test(invalidateTimeInMilliseconds)){
+    if(invalidateTimeInMilliseconds && /^\d+$/.test(invalidateTimeInMilliseconds)){
         //it is ok
     } else {
         invalidateTimeInMilliseconds=60*1000; //1 minute
