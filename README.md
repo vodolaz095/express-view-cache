@@ -56,8 +56,10 @@ Tests
 
 Install vows and test as usual
 
-    npm install vows
-    npm test
+    $ npm install vows
+    $ npm test
+
+[![Build Status](https://travis-ci.org/vodolaz095/express-view-cache.png)](https://travis-ci.org/vodolaz095/express-view-cache)
 
 Credits
 ==================
