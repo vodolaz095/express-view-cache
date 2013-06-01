@@ -3,7 +3,7 @@ var vows = require('vows'),
     adapterMemory = require('./../lib/adapterMemory.js'),
     assert = require('assert');
 
-vows.describe('Middleware').
+vows.describe('Middleware tests').
     addBatch({
         "General tests":{
             "topic":{
@@ -63,7 +63,6 @@ vows.describe('Middleware').
                 f({'originalUrl':'/doSomethingl', 'method':'PUT'}, topic.response2nd, topic.next2nd);
                 f({'originalUrl':'/doSomething', 'method':'DELETE'}, topic.response2nd, topic.next2nd);
                 f({'originalUrl':'/doSomething', 'method':'OPTIONS'}, topic.response2nd, topic.next2nd);
-
             }
         }
     }).

@@ -1,10 +1,9 @@
 var vows = require('vows'),
-    middleware = require('./../index.js'),
     assert = require('assert'),
     adapterMemory = require('./../lib/adapterMemory.js'),
     adapterMemJS = require('./../lib/adapterMemJS.js');
 
-vows.describe('MemJS adapter cache').
+vows.describe('Cache Adaptors tests').
     addBatch({"General test":{
         "topic":adapterMemJS,
         "It should have get and set methods":function (topic) {
