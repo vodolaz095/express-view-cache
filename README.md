@@ -14,7 +14,7 @@ Example
     var express = require('express'),
         http = require('http'),
         path = require('path'),
-        cachingMiddleware = require('./../');
+        cachingMiddleware = require('express-view-cache');
 
     var app = express();
 
