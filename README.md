@@ -3,6 +3,8 @@ express-view-cache
 
 Unobtrusive solution to express framework - cache rendered page, without database requests and page rendering.
 Technically it works as middleware - it tries to get and return the cached response, where the URL is the key to cached value.
+For example, we try to get the page of `/index.html` 2nd time, and it is returned from cache, without running other middlewares and the module,
+corresponding to route processing. So, this cache is lighting fast.
 It can use memory storage or [https://memcachier.com/](memcachier.com) via module [https://npmjs.org/package/memjs](memjs) as backend.
 Right now it is tested in production on heroku hosting.  Feedback is welcome!
 
@@ -44,12 +46,14 @@ Options
 
     app.use(cachingMiddleware(1000,{ //cache is stored for 1000 milliseconds
         'type':'application/json', //type of returned content - see [http://expressjs.com/api.html#res.type] for details
-
-        //driver to be used
-        'driver':'memory', //development memory storage
-        //'driver':'memjs', //memJS driver for managed memcache - see [https://npmjs.org/package/memjs] for details.
-        //It works from the box if you ran you app at heroku hosting with Memcachier addon installed
+        'driver':'memjs'
     }));
+
+The variable of `driver`  can be ommited, and the middleware will use build in memory storage.
+Be advised - the memory storage IS NOT INTENTED TO BE PRODUCTION READY! It is memleaky and not shared in cluster.
+
+If the variable of `driver` equals `memjs`, the [https://npmjs.org/package/memjs] module is used for managed memcache.
+It works from the box if you ran you app at heroku hosting with [https://addons.heroku.com/memcachier](Memcachier) addon installed.
 
 Tests
 ==================
