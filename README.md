@@ -16,7 +16,7 @@ Let's consider we have a NodeJS application with code like this:
     });
 
 The method `getPopular` of `posts` requires a call to database and executed slowly. Also rendeding the template of posts
-requires some time. So, maybe we need to cache all this? Ideally, when visitor get the page from url from `/getPopularPosts`
+requires some time. So, maybe we need to cache all this? Ideally, when visitor gets the page with url  `/getPopularPosts`
 we have to give him info right from cache, without requests to database, parsing data recieved, rendering page and other things
 we need to do to give him this page. The most expressJS way to do it is to make a separate middleware, that is runned before
 router middleware, and returns page from cache (if it is present in cache) or pass data to other middlewares, but this caching
