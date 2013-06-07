@@ -1,15 +1,35 @@
 express-view-cache
 ==================
 
-Unobtrusive solution to express framework - cache rendered page, without database requests and page rendering.
-Technically it works as middleware - it tries to get and return the cached response, where the URL is the key to cached value.
-For example, we try to get the page of `/index.html` 2nd time, and it is returned from cache, without running other middlewares and the module,
-corresponding to route processing. So, this cache is lighting fast.
-It can use memory storage or [memcachier.com](https://memcachier.com/) via module [memjs](https://npmjs.org/package/memjs) as backend.
+Unobtrusive solution to express framework - cache response content, without database requests and page rendering.
+
+Why do we need this plugin and how do it works?
+==================
+
+Let's consider we have a NodeJS application with code like this:
+
+    app.get('/getPopularPosts',function(req,res){
+        req.model.posts.getPopular(function(err,posts){
+            if(err) throw err;
+            res.render('posts',{"posts":posts});
+        });
+    });
+
+The method `getPopular` of `posts` requires a call to database and executed slowly. Also rendeding if template of posts
+requires some time. So, maybe we need to cache all this? Ideally, when visitor get the page from url from `/getPopularPosts`
+we have to give him info right from cache, without requests to database, parsing data recieved, rendering page and other things
+we need to do to give him this page. The most expressJS way to do it is to make a separate middleware, that is runned before
+router middleware, and returns page from cache (if it is present in cache) or pass data to other middlewares, but this caching
+middleware adds a listener to response, which SAVES rendered response to cache. And for future use, the response is taken from CACHE!
+
+It can use memory storage or (via module [memjs](https://npmjs.org/package/memjs))
+Memcache server or [memcachier.com](https://memcachier.com/) solution  as backend.
 Right now it is tested in production on heroku hosting.  Feedback is welcome!
+
 
 Example
 ==================
+There is a complete example of NodeJS + ExpressJS application which responds with current time.
 
     var express = require('express'),
         http = require('http'),
@@ -22,11 +42,14 @@ Example
         app.set('port', process.env.PORT || 3000);
         app.use(express.logger('dev'));
 
+        //set up caching BEFORE router middleware - because next() is not fired when we got rendered page from cache
         app.use(cachingMiddleware(1000,{'type':'application/json'}));
         app.use('/cacheFor5sec',cachingMiddleware(5000,{'type':'application/json'}));
         app.use('/cacheFor3sec',cachingMiddleware(3000,{'type':'application/json'}));
 
+        //set up router middleware for application
         app.use(app.router);
+
         app.use(express.errorHandler());
 
         app.get('*', function(request,response){
@@ -51,10 +74,15 @@ Options
 
 The variable of `driver`  can be ommited, and the middleware will use build in memory storage.
 Be advised - the memory storage IS NOT INTENTED TO BE PRODUCTION READY! It is memleaky and not shared in cluster.
-
 If the variable of `driver` equals `memjs`, the [memjs](https://npmjs.org/package/memjs) module is used for managed memcache.
 It works from the box if you ran you app at heroku hosting with [Memcachier](https://addons.heroku.com/memcachier) addon installed.
-See [http://expressjs.com/api.html#res.type](http://expressjs.com/api.html#res.type) for details about response type for returned content
+Also it works with locally installed Memcached instances - see [https://devcenter.heroku.com/articles/memcachier#node-js](https://devcenter.heroku.com/articles/memcachier#node-js)
+for details.
+If you want to use your private Memcache instance, you can set the process inviroment variables
+
+The parameter of `type` is for setting response type for returned content  -
+see [http://expressjs.com/api.html#res.type](http://expressjs.com/api.html#res.type) for details.
+
 
 Tests
 ==================
