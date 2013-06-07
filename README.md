@@ -67,7 +67,7 @@ There is a complete example of NodeJS + ExpressJS application which responds wit
 Options
 ==================
 
-    app.use(cachingMiddleware(1000,{ //cache is stored for 1000 milliseconds
+    app.use(cachingMiddleware(1000,{ //invalidation time, informations is stored in cache for 1000 milliseconds
         'type':'application/json', //type of returned content
         'driver':'memjs'
     }));
@@ -86,7 +86,6 @@ If you want to use your private Memcache instance, you can set the process invir
 And set the memcache protocol to binary, i.e. run the memcached like this
 
     $ memcached -v -B binary
-
 
 The parameter of `type` is for setting response type for returned content  -
 see [http://expressjs.com/api.html#res.type](http://expressjs.com/api.html#res.type) for details.
