@@ -15,7 +15,7 @@ Let's consider we have a NodeJS application with code like this:
         });
     });
 
-The method `getPopular` of `posts` requires a call to database and executed slowly. Also rendeding if template of posts
+The method `getPopular` of `posts` requires a call to database and executed slowly. Also rendeding the template of posts
 requires some time. So, maybe we need to cache all this? Ideally, when visitor get the page from url from `/getPopularPosts`
 we have to give him info right from cache, without requests to database, parsing data recieved, rendering page and other things
 we need to do to give him this page. The most expressJS way to do it is to make a separate middleware, that is runned before
@@ -78,7 +78,15 @@ If the variable of `driver` equals `memjs`, the [memjs](https://npmjs.org/packag
 It works from the box if you ran you app at heroku hosting with [Memcachier](https://addons.heroku.com/memcachier) addon installed.
 Also it works with locally installed Memcached instances - see [https://devcenter.heroku.com/articles/memcachier#node-js](https://devcenter.heroku.com/articles/memcachier#node-js)
 for details.
-If you want to use your private Memcache instance, you can set the process inviroment variables
+If you want to use your private Memcache instance, you can set the process inviroment variables like this
+
+    export MEMCACHIER_SERVERS="localhost:11211"
+    export MEMCACHIER_USERNAME=""
+    export MEMCACHIER_PASSWORD=""
+And set the memcache protocol to binary, i.e. run the memcached like this
+
+    $ memcached -v -B binary
+
 
 The parameter of `type` is for setting response type for returned content  -
 see [http://expressjs.com/api.html#res.type](http://expressjs.com/api.html#res.type) for details.
