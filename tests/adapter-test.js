@@ -4,14 +4,51 @@ var vows = require('vows'),
     adapterMemJS = require('./../lib/adapterMemJS.js');
 
 vows.describe('Cache Adaptors tests').
-    addBatch({"General test":{
+
+    addBatch({"General test for Memcached":{
         "topic":adapterMemJS,
         "It should have get and set methods":function (topic) {
             assert.isFunction(topic.get, 'adapterMemJS.get(key,cb) is not a function!');
             assert.isFunction(topic.set, 'adapterMemJS.set(key,value,cb,ttl) is not a function!');
         }
     }}).
-    addBatch({"General test":{
+
+    addBatch({"Memcached testing set ":{
+        topic:function () {
+            adapterMemJS.set('key1', 'key1value', this.callback, 1000);
+        },
+        "It should save value":function (err, result) {
+            assert.isNull(err);
+            assert.ok(result);
+        }
+    }}).
+
+    addBatch({"Memcached testing get immediate":{
+        topic:function () {
+            adapterMemJS.get('key1', this.callback);
+        },
+        "It should get value":function (err, result) {
+            assert.isNull(err);
+            assert.strictEqual(result, 'key1value');
+        }
+    }}).
+
+    addBatch({"Memcached testing get after 2 seconds":{
+        topic:function () {
+            var t=this;
+            setTimeout(function () {
+                adapterMemJS.get('key1', t.callback);
+            }, 2000);
+        },
+        "It should get NO value":function (err, result) {
+            assert.isNull(err);
+            assert.isNull(result);
+        }
+    }}).
+
+    //Memory adapter
+
+    addBatch({"General test for adapterMemory":{
         "topic":adapterMemory,
         "It should have get and set methods":function (topic) {
             assert.isFunction(topic.get, 'adapterMemory.get(key,cb) is not a function!');

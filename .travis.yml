@@ -4,3 +4,9 @@ node_js:
   - 0.9
   - 0.10
   - 0.11
+
+services:
+  - memcache
+
+before_script:
+  - export MEMCACHIER_SERVERS="localhost:11211";
