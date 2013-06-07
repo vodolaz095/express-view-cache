@@ -9,4 +9,6 @@ services:
   - memcache
 
 before_script:
-  - export MEMCACHIER_SERVERS="localhost:11211";
+  - export MEMCACHIER_SERVERS="localhost:11211"
+  - export MEMCACHIER_USERNAME=""
+  - export MEMCACHIER_PASSWORD=""
