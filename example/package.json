@@ -1,34 +1,37 @@
 {
-    "name":"express-view-cache",
-    "version":"0.0.1",
-    "description":"Example of Unobtrusive solution to express framework - cache rendered page on server side, without unnecessary database requests and rendering.",
-    "main":"app.js",
-    "scripts":{
-        "run":"node app.js"
+    "name": "express-view-cache",
+    "version": "0.0.4",
+    "description": "Unobtrusive solution to express framework - cache rendered page on server side, without unnecessary database requests and rendering.",
+    "main": "index.js",
+    "scripts": {
+        "test": "./node_modules/.bin/vows -v tests/*"
     },
-    "repository":{
-        "type":"git",
-        "url":"git@github.com:vodolaz095/express-view-cache.git"
+    "repository": {
+        "type": "git",
+        "url": "git@github.com:vodolaz095/express-view-cache.git"
     },
-    "bugs":{
-        "url":"https://github.com/vodolaz095/express-view-cache/issues"
+    "bugs": {
+        "url": "https://github.com/vodolaz095/express-view-cache/issues"
     },
-    "author":{
-        "name":"Anatolij Ostroumov",
-        "email":"Ostroumov095@gmail.com",
-        "url":"http://www.teksi.ru/resume"
+    "author": {
+        "name": "Anatolij Ostroumov",
+        "email": "Ostroumov095@gmail.com",
+        "url": "http://www.teksi.ru/resume"
     },
-    "dependencies":{
-        "express":"3.x"
+    "dependencies": {
+        "memjs": "*"
     },
-    "keywords":[
+    "devDependencies": {
+        "vows": "*"
+    },
+    "keywords": [
         "express",
         "view",
         "cache",
         "memcached",
-        "redis",
+        "caching",
         "memory"
     ],
-    "license":"MIT",
-    "readmeFilename":"README.md"
+    "license": "MIT",
+    "readmeFilename": "README.md"
 }

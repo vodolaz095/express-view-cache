@@ -13,7 +13,7 @@ vows.describe('Cache Adaptors tests').
         }
     }}).
 
-// it do not works with travis-ci.org memcache - it is not binary one!
+// it do not works with travis-ci.org memcache instance- it  do not use binary protocol!
 // https://github.com/alevy/memjs#installation
 /*/
     addBatch({"Memcached testing set ":{
