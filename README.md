@@ -69,7 +69,7 @@ Options
 
     app.use(cachingMiddleware(1000,{ //invalidation time, informations is stored in cache for 1000 milliseconds
         'type':'application/json', //type of returned content
-        'driver':'memjs'
+        'driver':'memjs'//can be `memjs`,`redis`,`memory`
     }));
 
 The variable of `driver`  can be ommited, and the middleware will use build in memory storage.
@@ -78,7 +78,7 @@ If the variable of `driver` equals `memjs`, the [memjs](https://npmjs.org/packag
 It works from the box if you ran you app at heroku hosting with [Memcachier](https://addons.heroku.com/memcachier) addon installed.
 Also it works with locally installed Memcached instances - see [https://devcenter.heroku.com/articles/memcachier#node-js](https://devcenter.heroku.com/articles/memcachier#node-js)
 for details.
-If you want to use your private Memcache instance, you can set the process inviroment variables like this
+If you want to use your private `Memcache` instance, you can set the process inviroment variables like this
 
     export MEMCACHIER_SERVERS="localhost:11211"
     export MEMCACHIER_USERNAME=""
@@ -86,6 +86,12 @@ If you want to use your private Memcache instance, you can set the process invir
 And set the memcache protocol to binary, i.e. run the memcached like this
 
     $ memcached -v -B binary
+
+If you want to use `Redis` instance, you can set the `driver` to `redis`. If your redis server have not the default
+settings (localhost:6379 withour password), you can set redis parameters by setting enviroment variable of `redisUrl`
+like this:
+
+    export redisUrl="redis://username:veryLongAndHardPasswordBecauseRedisHashes50kPasswordsEverySecond@somehost:6378"
 
 The parameter of `type` is for setting response type for returned content  -
 see [http://expressjs.com/api.html#res.type](http://expressjs.com/api.html#res.type) for details.

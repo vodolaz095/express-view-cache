@@ -1,5 +1,6 @@
-var memoryAdapter=require('./lib/adapterMemory.js'),
-    memJSAdapter=require('./lib/adapterMemJS.js');
+var adapterMemory = require('./lib/adapterMemory.js'),
+    adapterMemJS = require('./lib/adapterMemJS.js'),
+    adapterRedis = require('./lib/adapterRedis.js');
 
 // Caching middleware for Express framework
 // details are here https://github.com/vodolaz095/express-view-cache
@@ -14,13 +15,16 @@ module.exports=function(invalidateTimeInMilliseconds,parameters){
     if (parameters && parameters.driver) {
         switch (parameters.driver) {
             case 'memjs':
-                cache = memJSAdapter;
+                cache = adapterMemJS;
+                break;
+            case 'redis':
+                cache = adapterRedis;
                 break;
             default :
-                cache = memoryAdapter;
+                cache = adapterMemory;
         }
     } else {
-        cache = memoryAdapter;
+        cache = adapterMemory;
     }
 
     return function(request,response,next){
