@@ -121,3 +121,7 @@ Copyright (c) 2011-2013 Ostroumov Anatolij [http://teksi.ru/resume/](http://teks
 
 
 
+
+
+[![Bitdeli Badge](https://d2weczhvl823v0.cloudfront.net/vodolaz095/express-view-cache/trend.png)](https://bitdeli.com/free "Bitdeli Badge")
+
