@@ -29,7 +29,7 @@ module.exports=function(invalidateTimeInMilliseconds,parameters){
 
     return function(request,response,next){
         if(parameters && parameters.type){
-            response.type(parameters.type);
+            response.setHeader('Content-Type', parameters.type);
         }
         if (request.method == 'GET') {
             cache.get(request.originalUrl,function(err,value){
