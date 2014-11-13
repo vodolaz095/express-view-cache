@@ -1,10 +1,17 @@
 {
   "name": "express-view-cache",
-  "version": "0.0.6",
-  "description": "Unobtrusive solution to express framework - cache rendered page on server side, without unnecessary database requests and rendering.",
+  "version": "0.1.0",
+  "description": "Unobtrusive solution to express framework - cache rendered page on server side in redis database, without unnecessary database requests and rendering.",
   "main": "index.js",
+  "engines": {
+    "node": ">=0.10.32",
+    "npm": ">=1.4.3"
+  },
+  "os": [ "linux", "darwin" ],
   "scripts": {
-    "test": "./node_modules/.bin/vows --spec tests/*"
+    "start": "node example/expressAppWithCache.js",
+    "test": "./node_modules/.bin/mocha --reporter spec",
+    "coverage": "./node_modules/.bin/istanbul cover ./node_modules/.bin/_mocha"
   },
   "repository": {
     "type": "git",
@@ -15,27 +22,30 @@
   },
   "author": {
     "name": "Anatolij Ostroumov",
-    "email": "Ostroumov095@gmail.com",
-    "url": "http://www.teksi.ru/resume"
+    "url": "https://github.com/vodolaz095",
+    "email": "ostroumov095@gmail.com"
   },
   "dependencies": {
-    "memjs": "*",
-    "redis":"*"
+    "async":"0.9.0",
+    "redis": "0.12.1",
+    "request": "2.48.0"
   },
   "optionalDependencies":{
     "hiredis":"*"
   },
   "devDependencies": {
-    "vows": "*"
+    "express": "4.10.2",
+    "errorhandler": "1.2.2",
+    "morgan": "1.5.0",
+    "mocha": "2.0.1",
+    "should": "4.2.1"
   },
   "keywords": [
     "express",
     "view",
     "cache",
-    "memcached",
     "redis",
-    "caching",
-    "memory"
+    "caching"
   ],
   "license": "MIT",
   "readmeFilename": "README.md"

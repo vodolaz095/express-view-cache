@@ -1,66 +1,152 @@
-var adapterMemory = require('./lib/adapterMemory.js'),
-    adapterMemJS = require('./lib/adapterMemJS.js'),
-    adapterRedis = require('./lib/adapterRedis.js');
+'use strict';
+var curl = require('request'),
+  url = require('url'),
+  async = require('async'),
+  crypto = require('crypto'),
+  redis = require('redis');
 
-// Caching middleware for Express framework
-// details are here https://github.com/vodolaz095/express-view-cache
+/**
+ * @module express-view-cache
+ */
 
 
-module.exports=function(invalidateTimeInMilliseconds,parameters){
-    if(invalidateTimeInMilliseconds && /^\d+$/.test(invalidateTimeInMilliseconds)){
-        //it is ok
+/**
+ * @class EVC
+ * @classdesc
+ * This class accepts redis connection parameters as constructor, and builds Caching Middleware
+ * by method { link EVC#cachingMiddleware }
+ * @see EVC#cachingMiddleware
+ */
+
+
+function EVC(options) {
+  var config = {},
+    redisClient,
+    o,
+    cacheKey = crypto.createHash('md5').update('I_WANNA_TEA_AND_MEAT' + (Math.random() * Date.now())).digest('hex').toString();
+
+  if (typeof options === 'string') {
+    o = url.parse(options);
+    if (o.protocol === 'redis:') {
+      config.host = o.hostname || 'localhost';
+      config.port = o.port || 6379;
+      config.pass = o.auth ? o.auth[1] : null;
+      config.appPort = process.env.PORT || 3000;
     } else {
-        invalidateTimeInMilliseconds=60*1000; //1 minute
+      throw new Error('ExpressViewCache - unable to parse ' + o + ' as redis connection string!');
     }
-    if (parameters && parameters.driver) {
-        switch (parameters.driver) {
-            case 'memjs':
-                cache = adapterMemJS;
-                break;
-            case 'redis':
-                cache = adapterRedis;
-                break;
-            default :
-                cache = adapterMemory;
-        }
-    } else {
-        cache = adapterMemory;
-    }
+  } else {
+    config = {
+      'host': options.host || 'localhost',
+      'port': options.port || 6379,
+      'pass': options.pass,
+      'client': options.client,
+      'appPort': options.appPort || process.env.PORT || 3000
+    };
+  }
 
-    return function(request,response,next){
-        if(parameters && parameters.type){
-            response.type(parameters.type);
-        }
-        if (request.method == 'GET') {
-            cache.get(request.originalUrl,function(err,value){
-                if(value){
-                    console.log('FRONT_CACHE HIT: GET '+request.originalUrl);
-                    response.header('Cache-Control', "public, max-age="+Math.floor(invalidateTimeInMilliseconds/1000)+", must-revalidate");
-                    response.send(value);
-                    return true;
-                } else {
-                    //http://stackoverflow.com/questions/13690335/node-js-express-simple-middleware-to-output-first-few-characters-of-response?rq=1
-                    var end = response.end;
-                    response.end = function(chunk, encoding){
-                        response.end = end;
-                        response.on('finish',function(){
-                            cache.set(request.originalUrl,chunk,function(err,result){
-                                if(err) throw err;
-                                if(result){
-                                    console.log('FRONT_CACHE SAVED: GET '+request.originalUrl);
-                                } else {
-                                    console.log('FRONT_CACHE ERROR SAVING: GET '+request.originalUrl)
-                                }
-                            },invalidateTimeInMilliseconds);
-                        });
-                        response.header('Cache-Control', "public, max-age="+Math.floor(invalidateTimeInMilliseconds/1000)+", must-revalidate");
-                        response.end(chunk, encoding);
-                    };
-                    return next();
-                }
+  redisClient = config.client || redis.createClient(config.port, config.host, {
+    'auth_pass': config.pass,
+    'return_buffers': true
+  });
+
+  /**
+   * @method EVC#cachingMiddleware
+   * @param {Number} [ttlInMilliSeconds=30000]
+   * @return {function} function(req, res, next){...}
+   */
+
+  this.cachingMiddleware = function (ttlInMilliSeconds) {
+    ttlInMilliSeconds = parseInt(ttlInMilliSeconds, 10) || 30000;
+
+    return function (req, res, next) {
+      if (req.method === 'GET' && req.headers.express_view_cache !== cacheKey) {
+        var key = req.originalUrl,
+          data = {};
+        async.waterfall([
+          function (cb) {
+            async.parallel({
+              'dataFound': function (clb) {
+                redisClient.hgetall(key, clb);
+              },
+              'age': function (clb) {
+                redisClient.ttl(key, clb);
+              }
+            }, function (error, obj) {
+              if (error) {
+                cb(error);
+              } else {
+                cb(null, obj.dataFound, obj.age);
+              }
             });
-        } else {
-            return next();
-        }
-    }
+          },
+          function (dataFound, age, cb) {
+            if (dataFound) {
+              data.Expires = new Date(Date.now() + age).toUTCString();
+              data['Last-Modified'] = new Date(dataFound.savedAt).toUTCString();
+              data['Content-Type'] = dataFound.contentType;
+              data.statusCode = dataFound.statusCode;
+              data.content = dataFound.content;
+              cb(null, true);
+            } else {
+              curl({
+                'method': 'GET',
+                'headers': {
+                  'express_view_cache': cacheKey
+                },
+                'url': 'http://localhost:' + config.appPort + key
+              }, function (error, response, body) {
+                if (error) {
+                  cb(error);
+                } else {
+                  data.Expires = new Date(Date.now() + ttlInMilliSeconds).toUTCString();
+                  data['Last-Modified'] = new Date().toUTCString();
+                  data['Content-Type'] = response.headers['content-type'];
+                  data.statusCode = response.statusCode;
+                  data.content = body;
+                  cb(error, false);
+                }
+              });
+            }
+          },
+          function (hit, cb) {
+            if (hit) {
+              cb(null);
+            } else {
+              async.series([
+                function (clb) {
+                  redisClient.hmset(key, {
+                    'savedAt': new Date(),
+                    'contentType': data['Content-Type'],
+                    'statusCode': data.statusCode,
+                    'content': data.content
+                  }, clb);
+                },
+                function (clb) {
+                  redisClient.expire(key, Math.floor(ttlInMilliSeconds / 1000), clb);
+                }
+              ], cb);
+            }
+          }
+        ], function (error) {
+          if (error) {
+            next(error);
+          } else {
+            res.set('Expires', data.Expires);
+            res.set('Last-Modified', data['Last-Modified']);
+            res.set('Content-Type', data['Content-Type']);
+            res.status(data.statusCode);
+            res.send(data.content);
+          }
+        });
+      } else {
+        next();
+      }
+    };
+  };
+  return this;
 }
+
+module.exports = exports = function (config) {
+  return new EVC(config);
+};
