@@ -89,11 +89,11 @@ function EVC(options) {
               data.content = dataFound.content;
               cb(null, true);
             } else {
+              var headers = req.headers;
+              headers.express_view_cache = cacheKey;
               curl({
                 'method': 'GET',
-                'headers': {
-                  'express_view_cache': cacheKey
-                },
+                'headers': headers,
                 'url': 'http://localhost:' + config.appPort + key
               }, function (error, response, body) {
                 if (error) {
