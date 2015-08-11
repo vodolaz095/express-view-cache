@@ -30,7 +30,7 @@ function EVC(options) {
     if (o.protocol === 'redis:') {
       config.host = o.hostname || 'localhost';
       config.port = o.port || 6379;
-      config.pass = o.auth ? o.auth[1] : null;
+      config.pass = o.auth ? o.auth.split(':')[1] : null;
       config.appPort = process.env.PORT || 3000;
     } else {
       throw new Error('ExpressViewCache - unable to parse ' + o + ' as redis connection string!');
