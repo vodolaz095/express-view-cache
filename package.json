@@ -1,6 +1,6 @@
 {
   "name": "express-view-cache",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "description": "Unobtrusive solution to express framework - cache rendered page on server side in redis database, without unnecessary database requests and rendering.",
   "main": "index.js",
   "engines": {
