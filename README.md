@@ -15,7 +15,7 @@ with near the same API and better functionality.
 
 Shameless advertisement
 ==================
-You can hire the author of this package by Odesk - [https://www.odesk.com/users/~0120ba573d09c66c51](https://www.odesk.com/users/~0120ba573d09c66c51s)
+You can hire the author of this package by Odesk - [http://www.upwork.com/o/profiles/users/_~0120ba573d09c66c51/](http://www.upwork.com/o/profiles/users/_~0120ba573d09c66c51/)
 
 
 Why do we need this plugin and how does it work?
