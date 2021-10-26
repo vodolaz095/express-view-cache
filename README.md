@@ -7,15 +7,9 @@ express-view-cache
 
 Unobtrusive solution to express 4.0.0 framework - cache response content in Redis database.
 
-Attention!
-==================
-Version `0.0.6` is abandoned. Sorry. But it is still present, you can use it, if you are brave.
-But i have encountered few problems with this version i was unable to solve, and i decided to rewrite it from scratch,
-with near the same API and better functionality.
-
 Shameless advertisement
 ==================
-You can hire the author of this package by Odesk - [http://www.upwork.com/o/profiles/users/_~0120ba573d09c66c51/](http://www.upwork.com/o/profiles/users/_~0120ba573d09c66c51/)
+You can hire the author of this package by Upwork - [https://www.upwork.com/freelancers/~0120ba573d09c66c51](https://www.upwork.com/freelancers/~0120ba573d09c66c51/)
 
 
 Why do we need this plugin and how does it work?
@@ -47,41 +41,41 @@ There is a complete example of NodeJS + ExpressJS (4.x.x) application which resp
 
 ```javascript
 
-    var express = require('express'),
-      morgan = require('morgan'),
-      errorHandler = require('errorhandler'),
-      request = require('request'),
-      http = require('http'),
-      EVC = require('express-view-cache'),
-      app = express(),
-      evc = EVC('redis://redis:someLongAuthPassword@localhost:6379');
+'use strict';
 
-    app.set('port', process.env.PORT || 3000);
-    app.use(morgan('dev'));
-    app.use('/cacheFor5sec', evc.cachingMiddleware(5000));
-    app.use('/cacheFor3sec', evc.cachingMiddleware(3000));
-    app.get('*', function (request, response) {
-      response.json({
-        'Page Created At': new Date().toLocaleTimeString()
-      });
+const express = require('express');
+const  morgan = require('morgan');
+const  errorHandler = require('errorhandler');
+const  request = require('request');
+const  http = require('http');
+const  EVC = require('express-view-cache');
+const  app = express();
+const  evc = EVC('redis://redis:someLongAuthPassword@localhost:6379');
+
+app.set('port', process.env.PORT || 3000);
+app.use(morgan('dev'));
+app.use('/cacheFor5sec', evc.cachingMiddleware(5000)); // every path with prefix /cacheFor5sec is cached for 5 seconds
+app.use('/cacheFor3sec', evc.cachingMiddleware(3000)); // every path with prefix /cacheFor3sec is cached for 3 seconds
+app.get('*', function (request, response) {
+  response.json({
+    'Page Created At': new Date().toLocaleTimeString()
+  });
+});
+app.use(errorHandler());
+
+http.createServer(app).listen(app.get('port'), function () {
+  console.log('Express server listening on port %s', app.get('port')); // eslint-disable-line
+  setInterval(function(){
+    request('http://localhost:'+app.get('port')+'/', function(error, response, body){
+      console.log('GET /',body);  // eslint-disable-line
     });
-    app.use(errorHandler());
-
-    http.createServer(app).listen(app.get('port'), function () {
-      console.log("Express server listening on port " + app.get('port'));
-
-      setInterval(function(){
-        request('http://localhost:'+app.get('port')+'/', function(error, response, body){
-          console.log('GET /',body);
-        })
-      }, 1000);
-
-      setInterval(function(){
-        request('http://localhost:'+app.get('port')+'/cacheFor3sec', function(error, response, body){
-          console.log('GET /cacheFor3sec',body);
-        })
-      }, 1000);
+  }, 1000);
+  setInterval(function(){
+    request('http://localhost:'+app.get('port')+'/cacheFor3sec', function(error, response, body){
+      console.log('GET /cacheFor3sec',body);  // eslint-disable-line
     });
+  }, 1000);
+});
 
 ```
 
@@ -89,22 +83,23 @@ There is a complete example of NodeJS + ExpressJS (4.x.x) application which resp
 Options
 ==================
 
-    var evc = EVC(options);
-    app.use('/someURItoBeCachedForFiveSeconds', evc.cachingMiddleware(5000));
+    const evc = EVC(options);
+    app.use('/pathPrefixToBeCachedForFiveSeconds', evc.cachingMiddleware(5000));
 
 `Options` can be a redis connection string like `redis://usernameTotallyIgnored:someLongPassword@redis.example.org:6379`
 
-also `options` can be an dictionary object with this fields:
+also `options` can be a dictionary object with these fields:
 
 * `host` - default is `localhost` - the hostname of redis server
 * `port` - default is `6379` - the port where the redis server listens
-* `pass` - [password for redis authorization](https://github.com/mranney/node_redis#clientauthpassword-callback), default is null
-* `client` - ready to use [node-redis](https://github.com/mranney/node_redis) client - this option overrides all previous
+* `pass` - password for redis authorization, default is null
+* `client` - ready to use [node-redis](https://www.npmjs.com/package/redis) client - this option overrides all previous
 * `appPort` - port of nodejs application to use, default is `process.env.PORT` or `3000`
 
 Tests
 ==================
 
+    $ npm run lint
     $ npm test
 
 License

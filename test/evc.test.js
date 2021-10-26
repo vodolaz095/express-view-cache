@@ -1,12 +1,15 @@
-var
-  should = require('should'),
-  express = require('express'),
-  request = require('request'),
-  http = require('http'),
-  EVC = require('./../'),
-  app = express(),
-  port = process.env.PORT || 3000,
-  evc = EVC('redis://redis:someLongAuthPassword@localhost:6379');
+'use strict';
+
+/* global describe, it, before */
+
+const should = require('should'); // eslint-disable-line
+const express = require('express');
+const request = require('request');
+const http = require('http');
+const EVC = require('./../');
+const app = express();
+const port = process.env.PORT || 3000;
+const evc = EVC('redis://redis:someLongAuthPassword@localhost:6379');
 
 app.set('port', port);
 app.use('/cacheFor1sec', evc.cachingMiddleware(1000));
@@ -18,15 +21,15 @@ app.all('*', function (request, response) {
 
 describe('EVC#cachingMiddleware', function () {
   it('is a function', function () {
-    evc.cachingMiddleware.should.be.a.function;
+    evc.cachingMiddleware.should.be.a.Function();
   });
   it('returns function', function () {
-    evc.cachingMiddleware(1000).should.be.a.function;
-  })
+    evc.cachingMiddleware(1000).should.be.a.Function();
+  });
 });
 
 function verifyResponse(response, cached){
-  console.log(response.headers);
+  console.log(response.headers); // eslint-disable-line
   response.headers['content-type'].should.be.equal('application/json; charset=utf-8');
   if(cached){
     response.headers['expires'].should.be.a.Date;
@@ -157,6 +160,4 @@ describe('EVC#cachingMiddleware(1000) works', function () {
       }
     });
   });
-
 });
-
