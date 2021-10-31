@@ -48,14 +48,24 @@ const  morgan = require('morgan');
 const  errorHandler = require('errorhandler');
 const  request = require('request');
 const  http = require('http');
-const  EVC = require('express-view-cache');
+const  EVC = require('./../');
 const  app = express();
 const  evc = EVC('redis://redis:someLongAuthPassword@localhost:6379');
 
 app.set('port', process.env.PORT || 3000);
 app.use(morgan('dev'));
+
+// simple caching middlewared
 app.use('/cacheFor5sec', evc.cachingMiddleware(5000)); // every path with prefix /cacheFor5sec is cached for 5 seconds
 app.use('/cacheFor3sec', evc.cachingMiddleware(3000)); // every path with prefix /cacheFor3sec is cached for 3 seconds
+
+// every path with /cacheCustom will be cached with key based on users IP  and ttl 3 seconds
+app.use('/cacheCustom', evc.customCachingMiddleware(function (req, cb){
+  return process.nextTick(function (){
+    cb(null, `${req.ip}`, 3000);
+  });
+}));
+
 app.get('*', function (request, response) {
   response.json({
     'Page Created At': new Date().toLocaleTimeString()
@@ -75,7 +85,13 @@ http.createServer(app).listen(app.get('port'), function () {
       console.log('GET /cacheFor3sec',body);  // eslint-disable-line
     });
   }, 1000);
+  setInterval(function(){
+    request('http://localhost:'+app.get('port')+'/cacheCustom', function(error, response, body){
+      console.log('GET /cacheCustom',body);  // eslint-disable-line
+    });
+  }, 1000);
 });
+
 
 ```
 
@@ -84,7 +100,6 @@ Options
 ==================
 
     const evc = EVC(options);
-    app.use('/pathPrefixToBeCachedForFiveSeconds', evc.cachingMiddleware(5000));
 
 `Options` can be a redis connection string like `redis://usernameTotallyIgnored:someLongPassword@redis.example.org:6379`
 
@@ -94,7 +109,71 @@ also `options` can be a dictionary object with these fields:
 * `port` - default is `6379` - the port where the redis server listens
 * `pass` - password for redis authorization, default is null
 * `client` - ready to use [node-redis](https://www.npmjs.com/package/redis) client - this option overrides all previous
-* `appPort` - port of nodejs application to use, default is `process.env.PORT` or `3000`
+
+Using simple caching middleware
+=======================
+
+This middleware simply caches response for given duration with `req.originalUrl` as caching key:
+
+    app.use('/pathPrefixToBeCachedForFiveSeconds', evc.cachingMiddleware(5000));
+
+
+Using custom caching middleware
+=======================
+
+This middleware accepts async function that extracts key name and ttl from request object.
+It can be used for writing complicated caching rules, for example, these ones:
+
+
+```javascript
+
+// every path with /cacheCustom will be cached with key based on users IP  and ttl 3 seconds
+app.use('/cacheCustom', evc.customCachingMiddleware(function (req, cb) {
+  const key = `${req.ip}`;
+  return process.nextTick(function () {
+    cb(null, key, 3000);
+  });
+}));
+```
+
+Consider we have dashboard, that should be cached for 1 second for admin users, and for 5 seconds - to ordinary users.
+And every user has to have his/her own data.
+
+```javascript
+
+const dashboardRouter = express.router();
+// consider we use PassportJS to reject unauthorized access
+dashboardRouter.use(function requireAuthorized(req, res, next) {
+  if(req.user) {
+    return next();
+  }
+  return  res.sendStatus(401);
+});
+
+// cache dashboard 
+dashboardRouter.use('/dashboard', evc.customCachingMiddleware(function (req, cb) {
+  const key = `DashBoardForUser${req.user.id}`; // caching key contains useds ID
+  const ttl = req.user.admin ? 1000 : 5000; // caching TTL depends on users permissions
+  return process.nextTick(function () {
+    cb(null, key, ttl);
+  });
+}));
+
+// actually, generate personal dasboard for user
+dashboardRouter.get('/dashboard', function (req,res,next){
+  req.model.makeDashboardForUser(req.user, function (error, data){
+    if(error) {
+      return next(error);
+    }
+    return res.json(data);
+  });
+});
+
+
+```
+
+
+
 
 Tests
 ==================

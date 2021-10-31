@@ -1,6 +1,6 @@
 {
   "name": "express-view-cache",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Unobtrusive solution to express framework - cache rendered page on server side in redis database, without unnecessary database requests and rendering.",
   "main": "index.js",
   "engines": {
@@ -10,7 +10,7 @@
   "scripts": {
     "start": "node example/expressAppWithCache.js",
     "lint": "eslint test/*.js example/*.js *.js",
-    "test": "./node_modules/.bin/mocha --reporter spec"
+    "test": "mocha --exit --reporter spec"
   },
   "repository": {
     "type": "git",

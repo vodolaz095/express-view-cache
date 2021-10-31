@@ -13,18 +13,15 @@ const evc = EVC('redis://redis:someLongAuthPassword@localhost:6379');
 
 app.set('port', port);
 app.use('/cacheFor1sec', evc.cachingMiddleware(1000));
+app.use('/cacheCustom', evc.customCachingMiddleware(function (req, cb){
+  process.nextTick(function (){
+    console.log('Key is %s %s', req.originalUrl, req.ip); // eslint-disable-line
+    cb(null, req.ip, 1000);
+  });
+}));
 app.all('*', function (request, response) {
   response.json({
     'dts': Date.now()
-  });
-});
-
-describe('EVC#cachingMiddleware', function () {
-  it('is a function', function () {
-    evc.cachingMiddleware.should.be.a.Function();
-  });
-  it('returns function', function () {
-    evc.cachingMiddleware(1000).should.be.a.Function();
   });
 });
 
@@ -40,124 +37,193 @@ function verifyResponse(response, cached){
   response.statusCode.should.be.equal(200);
 }
 
-describe('EVC#cachingMiddleware(1000) works', function () {
-
+describe('EVC', function (){
   before(function (done) {
     http.createServer(app).listen(app.get('port'), function () {
       done();
     });
   });
 
-  it('for GET uncached page', function (done) {
-    request({'method': 'GET', 'url': 'http://localhost:' + port + '/'}, function (error, response, body) {
-      if (error) {
-        done(error);
-      } else {
-        verifyResponse(response);
-        (Date.now() - (JSON.parse(body)).dts).should.be.below(1000);
-        done();
-      }
+  describe('EVC#cachingMiddleware', function () {
+    it('is a function', function () {
+      evc.cachingMiddleware.should.be.a.Function();
+    });
+    it('returns function', function () {
+      evc.cachingMiddleware(1000).should.be.a.Function();
     });
   });
 
-  it('for POST uncached page', function (done) {
-    request({'method': 'POST', 'url': 'http://localhost:' + port + '/'}, function (error, response, body) {
-      if (error) {
-        done(error);
-      } else {
-        verifyResponse(response);
-        (Date.now() - (JSON.parse(body)).dts).should.be.below(1000);
-        done();
-      }
+  describe('EVC#cachingMiddleware(1000) works', function () {
+    it('for GET uncached page', function (done) {
+      request({'method': 'GET', 'url': 'http://localhost:' + port + '/'}, function (error, response, body) {
+        if (error) {
+          done(error);
+        } else {
+          verifyResponse(response);
+          (Date.now() - (JSON.parse(body)).dts).should.be.below(1000);
+          done();
+        }
+      });
+    });
+    it('for POST uncached page', function (done) {
+      request({'method': 'POST', 'url': 'http://localhost:' + port + '/'}, function (error, response, body) {
+        if (error) {
+          done(error);
+        } else {
+          verifyResponse(response);
+          (Date.now() - (JSON.parse(body)).dts).should.be.below(1000);
+          done();
+        }
+      });
+    });
+    it('for PUT uncached page', function (done) {
+      request({'method': 'PUT', 'url': 'http://localhost:' + port + '/'}, function (error, response, body) {
+        if (error) {
+          done(error);
+        } else {
+          verifyResponse(response);
+          (Date.now() - (JSON.parse(body)).dts).should.be.below(1000);
+          done();
+        }
+      });
+    });
+    it('for DELETE uncached page', function (done) {
+      request({'method': 'DELETE', 'url': 'http://localhost:' + port + '/'}, function (error, response, body) {
+        if (error) {
+          done(error);
+        } else {
+          verifyResponse(response);
+          (Date.now() - (JSON.parse(body)).dts).should.be.below(1000);
+          done();
+        }
+      });
+    });
+    it('for GET cached page', function (done) {
+      request({'method': 'GET', 'url': 'http://localhost:' + port + '/cacheFor1sec'}, function (error, response, body) {
+        if (error) {
+          done(error);
+        } else {
+          verifyResponse(response, true);
+          (Date.now() - (JSON.parse(body)).dts).should.be.below(1000);
+          setTimeout(function(){
+            request({
+              'method': 'GET',
+              'url': 'http://localhost:' + port + '/cacheFor1sec'
+            }, function (error, response, body) {
+              if (error) {
+                done(error);
+              } else {
+                verifyResponse(response, true);
+                (Date.now() - (JSON.parse(body)).dts).should.be.above(800);
+                done();
+              }
+            });
+          }, 900);
+        }
+      });
+    });
+    it('for POST cached page', function (done) {
+      request({'method': 'POST', 'url': 'http://localhost:' + port + '/cacheFor1sec'}, function (error, response, body) {
+        if (error) {
+          done(error);
+        } else {
+          verifyResponse(response);
+          (Date.now() - (JSON.parse(body)).dts).should.be.below(1000);
+          done();
+        }
+      });
+    });
+    it('for PUT cached page', function (done) {
+      request({'method': 'PUT', 'url': 'http://localhost:' + port + '/cacheFor1sec'}, function (error, response, body) {
+        if (error) {
+          done(error);
+        } else {
+          verifyResponse(response);
+          (Date.now() - (JSON.parse(body)).dts).should.be.below(1000);
+          done();
+        }
+      });
+    });
+    it('for DELETE cached page', function (done) {
+      request({
+        'method': 'DELETE',
+        'url': 'http://localhost:' + port + '/cacheFor1sec'
+      }, function (error, response, body) {
+        if (error) {
+          done(error);
+        } else {
+          verifyResponse(response);
+          (Date.now() - (JSON.parse(body)).dts).should.be.below(1000);
+          done();
+        }
+      });
     });
   });
 
-  it('for PUT uncached page', function (done) {
-    request({'method': 'PUT', 'url': 'http://localhost:' + port + '/'}, function (error, response, body) {
-      if (error) {
-        done(error);
-      } else {
-        verifyResponse(response);
-        (Date.now() - (JSON.parse(body)).dts).should.be.below(1000);
-        done();
-      }
+  describe('EVC#customCachingMiddleware works', function (){
+    it('for GET cached page', function (done) {
+      request({'method': 'GET', 'url': 'http://localhost:' + port + '/cacheCustom'}, function (error, response, body) {
+        if (error) {
+          done(error);
+        } else {
+          verifyResponse(response, true);
+          (Date.now() - (JSON.parse(body)).dts).should.be.below(1000);
+          setTimeout(function(){
+            request({
+              'method': 'GET',
+              'url': 'http://localhost:' + port + '/cacheCustom'
+            }, function (error, response, body) {
+              if (error) {
+                done(error);
+              } else {
+                verifyResponse(response, true);
+                (Date.now() - (JSON.parse(body)).dts).should.be.above(800);
+                done();
+              }
+            });
+          }, 900);
+        }
+      });
     });
-  });
 
-  it('for DELETE uncached page', function (done) {
-    request({'method': 'DELETE', 'url': 'http://localhost:' + port + '/'}, function (error, response, body) {
-      if (error) {
-        done(error);
-      } else {
-        verifyResponse(response);
-        (Date.now() - (JSON.parse(body)).dts).should.be.below(1000);
-        done();
-      }
+
+    it('for POST cached page', function (done) {
+      request({'method': 'POST', 'url': 'http://localhost:' + port + '/cacheCustom'}, function (error, response, body) {
+        if (error) {
+          done(error);
+        } else {
+          verifyResponse(response);
+          (Date.now() - (JSON.parse(body)).dts).should.be.below(1000);
+          done();
+        }
+      });
     });
-  });
 
-  it('for GET cached page', function (done) {
-    request({'method': 'GET', 'url': 'http://localhost:' + port + '/cacheFor1sec'}, function (error, response, body) {
-      if (error) {
-        done(error);
-      } else {
-        verifyResponse(response, true);
-        (Date.now() - (JSON.parse(body)).dts).should.be.below(1000);
-        setTimeout(function(){
-          request({
-            'method': 'GET',
-            'url': 'http://localhost:' + port + '/cacheFor1sec'
-          }, function (error, response, body) {
-            if (error) {
-              done(error);
-            } else {
-              verifyResponse(response, true);
-              (Date.now() - (JSON.parse(body)).dts).should.be.above(800);
-              done();
-            }
-          });
-        }, 900);
-      }
+    it('for PUT cached page', function (done) {
+      request({'method': 'PUT', 'url': 'http://localhost:' + port + '/cacheCustom'}, function (error, response, body) {
+        if (error) {
+          done(error);
+        } else {
+          verifyResponse(response);
+          (Date.now() - (JSON.parse(body)).dts).should.be.below(1000);
+          done();
+        }
+      });
     });
-  });
 
-
-  it('for POST cached page', function (done) {
-    request({'method': 'POST', 'url': 'http://localhost:' + port + '/cacheFor1sec'}, function (error, response, body) {
-      if (error) {
-        done(error);
-      } else {
-        verifyResponse(response);
-        (Date.now() - (JSON.parse(body)).dts).should.be.below(1000);
-        done();
-      }
-    });
-  });
-
-  it('for PUT cached page', function (done) {
-    request({'method': 'PUT', 'url': 'http://localhost:' + port + '/cacheFor1sec'}, function (error, response, body) {
-      if (error) {
-        done(error);
-      } else {
-        verifyResponse(response);
-        (Date.now() - (JSON.parse(body)).dts).should.be.below(1000);
-        done();
-      }
-    });
-  });
-
-  it('for DELETE cached page', function (done) {
-    request({
-      'method': 'DELETE',
-      'url': 'http://localhost:' + port + '/cacheFor1sec'
-    }, function (error, response, body) {
-      if (error) {
-        done(error);
-      } else {
-        verifyResponse(response);
-        (Date.now() - (JSON.parse(body)).dts).should.be.below(1000);
-        done();
-      }
+    it('for DELETE cached page', function (done) {
+      request({
+        'method': 'DELETE',
+        'url': 'http://localhost:' + port + '/cacheCustom'
+      }, function (error, response, body) {
+        if (error) {
+          done(error);
+        } else {
+          verifyResponse(response);
+          (Date.now() - (JSON.parse(body)).dts).should.be.below(1000);
+          done();
+        }
+      });
     });
   });
 });

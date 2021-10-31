@@ -47,26 +47,34 @@ function EVC(options) {
   });
 
   /**
-   * @method EVC#cachingMiddleware
-   * @param {Number} [ttlInMilliSeconds=30000]
+   * @method EVC#customCachingMiddleware
+   * @param {function} extractKeyName(req, function extractKeyNameCallback(error, key, ttl){...}){...}
    * @return {function} function(req, res, next){...}
    */
-
-  this.cachingMiddleware = function (ttlInMilliSeconds) {
-    ttlInMilliSeconds = parseInt(ttlInMilliSeconds, 10) || 30000;
-
+  this.customCachingMiddleware = function (extractKeyName) {
     return function (req, res, next) {
       if (req.method === 'GET') { // only GET responses are cached
         let ended = false;
-        const key = req.originalUrl;
         let data = {};
+        let ttl;
+        let needle;
         async.waterfall([
-          function (cb) {
+          function (cb){
+            extractKeyName(req, function (error, k, t){
+              if(error) {
+                return cb(error);
+              }
+              ttl = t;
+              cb(null, k);
+            });
+          },
+          function (key,cb) {
             async.parallel({
               'dataFound': function (clb) {
                 redisClient.hgetall(key, clb);
               },
               'age': function (clb) {
+                needle = key;
                 redisClient.ttl(key, clb);
               }
             }, function (error, obj) {
@@ -99,7 +107,7 @@ function EVC(options) {
               if (a[0]) {
                 buffer.push(`${a[0]}`);
               }
-              data.Expires = new Date(Date.now() + ttlInMilliSeconds).toUTCString();
+              data.Expires = new Date(Date.now() + ttl).toUTCString();
               data['Last-Modified'] = new Date().toUTCString();
               data['Content-Type'] = res.getHeaders()['content-type'];
               data.statusCode = res.statusCode;
@@ -117,7 +125,7 @@ function EVC(options) {
             } else {
               async.series([
                 function (clb) {
-                  redisClient.hmset(key, {
+                  redisClient.hmset(needle, {
                     'savedAt': new Date(),
                     'contentType': data['Content-Type'],
                     'statusCode': data.statusCode,
@@ -125,7 +133,7 @@ function EVC(options) {
                   }, clb);
                 },
                 function (clb) {
-                  redisClient.expire(key, Math.floor(ttlInMilliSeconds / 1000), clb);
+                  redisClient.expire(needle, Math.floor(ttl / 1000), clb);
                 }
               ], cb);
             }
@@ -142,6 +150,21 @@ function EVC(options) {
         next();
       }
     };
+  };
+
+  /**
+   * @method EVC#cachingMiddleware
+   * @param {Number} [ttlInMilliSeconds=30000]
+   * @return {function} function(req, res, next){...}
+   */
+  this.cachingMiddleware = function (ttlInMilliSeconds) {
+    const ttl = parseInt(ttlInMilliSeconds, 10) || 30000;
+    if(!ttl) {
+      throw new Error(`error parsing ${ttlInMilliSeconds} as positive integer`);
+    }
+    return this.customCachingMiddleware(function (req, cb){
+      return cb(null, req.originalUrl, ttl);
+    });
   };
   return this;
 }
